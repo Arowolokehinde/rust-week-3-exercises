@@ -24,19 +24,19 @@ impl CompactSize {
         match self.value {
             0..=252 => vec![self.value as u8],
             253..=65535 => {
-                let mut v = vec![0xFD];
-                v.extend_from_slice(&(self.value as u16).to_le_bytes());
-                v
+                let mut new_v = vec![0xFD];
+                new_v.extend_from_slice(&(self.value as u16).to_le_bytes());
+                new_v
             }
             65536..=4_294_967_295 => {
-                let mut v = vec![0xFE];
-                v.extend_from_slice(&(self.value as u32).to_le_bytes());
-                v
+                let mut new_v = vec![0xFE];
+                new_v.extend_from_slice(&(self.value as u32).to_le_bytes());
+                new_v
             }
             _ => {
-                let mut v = vec![0xFF];
-                v.extend_from_slice(&(self.value as u64).to_le_bytes());
-                v
+                let mut new_v = vec![0xFF];
+                new_v.extend_from_slice(&(self.value as u64).to_le_bytes());
+                new_v
             }         
         }
     }
@@ -50,15 +50,35 @@ impl CompactSize {
         }
             let first = bytes[0];
             match first {
-                0x00..=0xFC => Ok((CompactSize::new(first as u64), 1))
+                0x00..=0xFC => Ok((CompactSize::new(first as u64), 1)),
+                0xFD => {
+                    if bytes.len() < 3 {
+                        return Err(BitcoinError::InsufficientBytes);
+                    }
+                    let value = u16::from_le_bytes(bytes[1..3].try_into().unwrap()) as u64;
+                    Ok((CompactSize::new(value), 3))
+                }
+                0xFE => {
+                    if bytes.len() < 5 {
+                        return Err(BitcoinError::InsufficientBytes);
+                    }
+                    let value = u32::from_le_bytes(bytes[1..5].try_into().unwrap()) as u64;
+                    Ok((CompactSize::new(value), 5))
+                }
+                _ => {
+                    if bytes.len() < 9 {
+                        return Err(BitcoinError::InsufficientBytes);
+                    }
+                    let value = u64::from_le_bytes(bytes[1..9].try_into().unwrap());
+                    Ok((CompactSize::new(value), 9))
+                }
+
             }
         }
 
         // todo!()
 
     }
-}
-
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct Txid(pub [u8; 32]);
 
