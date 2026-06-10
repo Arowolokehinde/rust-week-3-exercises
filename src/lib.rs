@@ -21,18 +21,40 @@ impl CompactSize {
 
     pub fn to_bytes(&self) -> Vec<u8> {
         // TODO: Encode according to Bitcoin's CompactSize format:
-        // [0x00–0xFC] => 1 byte
-        // [0xFDxxxx] => 0xFD + u16 (2 bytes)
-        // [0xFExxxxxxxx] => 0xFE + u32 (4 bytes)
-        // [0xFFxxxxxxxxxxxxxxxx] => 0xFF + u64 (8 bytes)
-        todo!()
+        match self.value {
+            0..=252 => vec![self.value as u8],
+            253..=65535 => {
+                let mut v = vec![0xFD];
+                v.extend_from_slice(&(self.value as u16).to_le_bytes());
+                v
+            }
+            65536..=4_294_967_295 => {
+                let mut v = vec![0xFE];
+                v.extend_from_slice(&(self.value as u32).to_le_bytes());
+                v
+            }
+            _ => {
+                let mut v = vec![0xFF];
+                v.extend_from_slice(&(self.value as u64).to_le_bytes());
+                v
+            }         
+        }
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<(Self, usize), BitcoinError> {
         // TODO: Decode CompactSize, returning value and number of bytes consumed.
         // First check if bytes is empty.
         // Check that enough bytes are available based on prefix.
-        todo!()
+        if bytes.is_empty() {
+            return Err(BitcoinError::InsufficientBytes);
+        }
+            let first = bytes[0];
+            match first {
+                0x00..=0xFC => Ok((CompactSize::new(first as u64), 1))
+            }
+        }
+
+        // todo!()
 
     }
 }
@@ -165,6 +187,7 @@ pub struct BitcoinTransaction {
 impl BitcoinTransaction {
     pub fn new(version: u32, inputs: Vec<TransactionInput>, lock_time: u32) -> Self {
         // TODO: Construct a transaction from parts
+        todo!()
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
