@@ -132,14 +132,24 @@ impl OutPoint {
 
     pub fn to_bytes(&self) -> Vec<u8> {
         // TODO: Serialize as: txid (32 bytes) + vout (4 bytes, little-endian)
-    todo!()
+        let mut new_v = vec![];
+        new_v.extend_from_slice(&self.txid.0);
+        new_v.extend_from_slice(&self.vout.to_le_bytes());
+        new_v
+    // todo!()
 
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<(Self, usize), BitcoinError> {
         // TODO: Deserialize 36 bytes: txid[0..32], vout[32..36]
         // Return error if insufficient bytes
-    todo!()
+        if bytes.len() < 36 {
+            return Err(BitcoinError::InsufficientBytes);
+        }
+        let txid = Txid(bytes[0..32].try_into().unwrap());
+        let vout = u32::from_le_bytes(bytes[32..36].try_into().unwrap());
+        Ok((OutPoint { txid, vout }, 36))
+    // todo!()
 
     }
 }
