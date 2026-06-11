@@ -103,7 +103,12 @@ impl<'de> Deserialize<'de> for Txid {
     {
         // TODO: Parse hex string into 32-byte array
         // Use `hex::decode`, validate length = 32
-    todo!()
+        let s = String::deserialize(deserializer)?;
+        let bytes = hex::decode(&s).map_err(serde::de::Error::custom)?;
+        let array: [u8; 32] = bytes.try_into().map_err(|_| serde::de::Error::custom("invalid length"))?;
+        Ok(Txid(array))
+
+    // todo!()
 
     }
 }
@@ -117,7 +122,11 @@ pub struct OutPoint {
 impl OutPoint {
     pub fn new(txid: [u8; 32], vout: u32) -> Self {
         // TODO: Create an OutPoint from raw txid bytes and output index
-    todo!()
+        Self {
+            txid: Txid(txid),
+            vout,
+        }
+    // todo!()
 
     }
 
