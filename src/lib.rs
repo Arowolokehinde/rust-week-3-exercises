@@ -1,3 +1,4 @@
+use serde::de::value;
 use serde::{Deserialize, Serialize};
 use std::fmt;
 use std::ops::Deref;
@@ -162,20 +163,33 @@ pub struct Script {
 impl Script {
     pub fn new(bytes: Vec<u8>) -> Self {
         // TODO: Simple constructor
-    todo!()
+        Self { bytes }
+    // todo!()
 
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
         // TODO: Prefix with CompactSize (length), then raw bytes
-    todo!()
+        let mut new_v = vec![];
+        new_v.extend_from_slice(&CompactSize::new(self.bytes.len() as u64).to_bytes());
+        new_v.extend_from_slice(&self.bytes);
+        new_v
+
+    // todo!()
 
     }
 
     pub fn from_bytes(bytes: &[u8]) -> Result<(Self, usize), BitcoinError> {
         // TODO: Parse CompactSize prefix, then read that many bytes
         // Return error if not enough bytes
-    todo!()
+        let (compact, prefix_size) = CompactSize::from_bytes(bytes)?;
+        let script_len = compact.value as usize;
+        if bytes.len() < prefix_size + script_len {
+            return Err(BitcoinError::InsufficientBytes);
+        }
+        let script_bytes = bytes[prefix_size..prefix_size + script_len].to_vec();
+        Ok((Script { bytes: script_bytes }, prefix_size + script_len))
+    // todo!()
 
     }
 }
@@ -184,7 +198,8 @@ impl Deref for Script {
     type Target = Vec<u8>;
     fn deref(&self) -> &Self::Target {
         // TODO: Allow &Script to be used as &[u8]
-    todo!()
+        &self.bytes
+    // todo!()
 
     }
 }
