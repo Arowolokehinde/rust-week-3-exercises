@@ -158,7 +158,7 @@ impl Script {
     pub fn new(bytes: Vec<u8>) -> Self {
         // TODO: Simple constructor
         Self { bytes }
-        // todo!()
+        
     }
 
     pub fn to_bytes(&self) -> Vec<u8> {
